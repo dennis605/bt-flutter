@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'bewohner_model.dart';
+import 'betreuer_model.dart'; // Importiere das Betreuer-Modell
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -20,8 +21,9 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'bewohner.db');
     return await openDatabase(
       path,
-      version: 1,
+      version: 2, // Erhöhe die Version, um die Datenbank zurückzusetzen
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade, // Füge die Upgrade-Methode hinzu
     );
   }
 
@@ -34,6 +36,22 @@ class DatabaseHelper {
         alter_age INTEGER
       )
     ''');
+    
+    await db.execute('''
+      CREATE TABLE betreuer(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        vorname TEXT,
+        nachname TEXT,
+        kommentar TEXT
+      )
+    ''');
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    // Lösche die Datenbank, um die Tabellen neu zu erstellen
+    await db.execute('DROP TABLE IF EXISTS bewohner');
+    await db.execute('DROP TABLE IF EXISTS betreuer');
+    await _onCreate(db, newVersion); // Erstelle die Tabellen neu
   }
 
   Future<int> insertBewohner(Bewohner bewohner) async {
@@ -69,6 +87,45 @@ class DatabaseHelper {
     Database db = await database;
     return await db.delete(
       'bewohner',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // Methoden für Betreuer
+
+  Future<int> insertBetreuer(Betreuer betreuer) async {
+    Database db = await database;
+    return await db.insert('betreuer', betreuer.toMap());
+  }
+
+  Future<List<Betreuer>> getBetreuer() async {
+    Database db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('betreuer');
+    return List.generate(maps.length, (i) {
+      return Betreuer(
+        id: maps[i]['id'],
+        vorname: maps[i]['vorname'],
+        nachname: maps[i]['nachname'],
+        kommentar: maps[i]['kommentar'] ?? '', // Standardwert für kommentar
+      );
+    });
+  }
+
+  Future<int> updateBetreuer(Betreuer betreuer) async {
+    Database db = await database;
+    return await db.update(
+      'betreuer',
+      betreuer.toMap(),
+      where: 'id = ?',
+      whereArgs: [betreuer.id],
+    );
+  }
+
+  Future<int> deleteBetreuer(int id) async {
+    Database db = await database;
+    return await db.delete(
+      'betreuer',
       where: 'id = ?',
       whereArgs: [id],
     );

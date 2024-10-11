@@ -1,33 +1,42 @@
 class Betreuer {
+  int? id;
   String vorname;
   String nachname;
-  int alter;
   String kommentar;
 
   Betreuer({
+    this.id,
     required this.vorname,
     required this.nachname,
-    required this.alter,
     required this.kommentar,
   });
 
   // Methode zum Erstellen eines Betreuer-Objekts aus einem JSON-Objekt
   factory Betreuer.fromJson(Map<String, dynamic> json) {
     return Betreuer(
+      id: json['id'],
       vorname: json['vorname'],
       nachname: json['nachname'],
-      alter: json['alter'],
-      kommentar: json['kommentar'],
+      kommentar: json['kommentar'] ?? '', // Standardwert für kommentar
     );
   }
 
   // Methode zum Umwandeln eines Betreuer-Objekts in ein JSON-Objekt
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'vorname': vorname,
       'nachname': nachname,
-      'alter': alter,
       'kommentar': kommentar,
+    };
+  }
+
+  // Methode zum Umwandeln eines Betreuer-Objekts in eine Map
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'vorname': vorname,
+      'nachname': nachname,
     };
   }
 }

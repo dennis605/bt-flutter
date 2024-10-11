@@ -21,8 +21,8 @@ class _VeranstaltungPageState extends State<VeranstaltungPage> {
   ];
 
   List<Betreuer> betreuerDummyListe = [
-    Betreuer(vorname: "Herr", nachname: "Betreuer", alter: 40, kommentar: "Kommentar A"),
-    Betreuer(vorname: "Frau", nachname: "Betreuerin", alter: 35, kommentar: "Kommentar B"),
+    Betreuer(vorname: "Herr", nachname: "Betreuer", kommentar: "Kommentar A"),
+    Betreuer(vorname: "Frau", nachname: "Betreuerin", kommentar: "Kommentar B"),
   ];
 
   // Auswahl von Bewohnern und Betreuern

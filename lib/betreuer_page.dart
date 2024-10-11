@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'betreuer_model.dart'; // Betreuermodell importieren
+import 'betreuer_model.dart'; // Importiere das Betreuer-Modell
+import 'database_helper.dart'; // Importiere den Datenbankhelper
 
 class BetreuerPage extends StatefulWidget {
   const BetreuerPage({super.key});
@@ -11,36 +12,48 @@ class BetreuerPage extends StatefulWidget {
 class _BetreuerPageState extends State<BetreuerPage> {
   // Liste der Betreuer
   List<Betreuer> betreuerListe = [];
+  final DatabaseHelper databaseHelper = DatabaseHelper();
 
   // Controller für das Formular
   final TextEditingController vornameController = TextEditingController();
   final TextEditingController nachnameController = TextEditingController();
-  final TextEditingController alterController = TextEditingController();
   final TextEditingController kommentarController = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    _loadBetreuer();
+  }
+
+  // Betreuer laden
+  void _loadBetreuer() async {
+    betreuerListe = await databaseHelper.getBetreuer();
+    setState(() {});
+  }
+
   // Betreuer hinzufügen
-  void _addBetreuer() {
-    setState(() {
-      betreuerListe.add(Betreuer(
-        vorname: vornameController.text,
-        nachname: nachnameController.text,
-        alter: int.parse(alterController.text),
-        kommentar: kommentarController.text,
-      ));
-    });
+  void _addBetreuer() async {
+    final neuerBetreuer = Betreuer(
+      vorname: vornameController.text,
+      nachname: nachnameController.text,
+      kommentar: kommentarController.text,
+    );
+
+    await databaseHelper.insertBetreuer(neuerBetreuer);
+    _loadBetreuer(); // Liste aktualisieren
 
     // Formular zurücksetzen
     vornameController.clear();
     nachnameController.clear();
-    alterController.clear();
     kommentarController.clear();
   }
 
   // Betreuer löschen
-  void _deleteBetreuer(int index) {
-    setState(() {
-      betreuerListe.removeAt(index);
-    });
+  void _deleteBetreuer(int index) async {
+    if (betreuerListe[index].id != null) {
+      await databaseHelper.deleteBetreuer(betreuerListe[index].id!);
+      _loadBetreuer(); // Liste aktualisieren
+    }
   }
 
   // Betreuer bearbeiten
@@ -48,7 +61,6 @@ class _BetreuerPageState extends State<BetreuerPage> {
     final betreuer = betreuerListe[index];
     vornameController.text = betreuer.vorname;
     nachnameController.text = betreuer.nachname;
-    alterController.text = betreuer.alter.toString();
     kommentarController.text = betreuer.kommentar;
 
     showDialog(
@@ -68,11 +80,6 @@ class _BetreuerPageState extends State<BetreuerPage> {
                 decoration: const InputDecoration(labelText: 'Nachname'),
               ),
               TextField(
-                controller: alterController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Alter'),
-              ),
-              TextField(
                 controller: kommentarController,
                 decoration: const InputDecoration(labelText: 'Kommentar'),
               ),
@@ -87,15 +94,16 @@ class _BetreuerPageState extends State<BetreuerPage> {
             ),
             ElevatedButton(
               child: const Text('Speichern'),
-              onPressed: () {
-                setState(() {
-                  betreuerListe[index] = Betreuer(
-                    vorname: vornameController.text,
-                    nachname: nachnameController.text,
-                    alter: int.parse(alterController.text),
-                    kommentar: kommentarController.text,
-                  );
-                });
+              onPressed: () async {
+                final bearbeiteterBetreuer = Betreuer(
+                  id: betreuer.id,
+                  vorname: vornameController.text,
+                  nachname: nachnameController.text,
+                  kommentar: kommentarController.text,
+                );
+
+                await databaseHelper.updateBetreuer(bearbeiteterBetreuer);
+                _loadBetreuer(); // Liste aktualisieren
                 Navigator.of(context).pop();
               },
             ),
@@ -127,11 +135,6 @@ class _BetreuerPageState extends State<BetreuerPage> {
                   decoration: const InputDecoration(labelText: 'Nachname'),
                 ),
                 TextField(
-                  controller: alterController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Alter'),
-                ),
-                TextField(
                   controller: kommentarController,
                   decoration: const InputDecoration(labelText: 'Kommentar'),
                 ),
@@ -152,7 +155,7 @@ class _BetreuerPageState extends State<BetreuerPage> {
                 final betreuer = betreuerListe[index];
                 return ListTile(
                   title: Text('${betreuer.vorname} ${betreuer.nachname}'),
-                  subtitle: Text('Alter: ${betreuer.alter}\nKommentar: ${betreuer.kommentar}'),
+                  subtitle: Text('Kommentar: ${betreuer.kommentar}'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
