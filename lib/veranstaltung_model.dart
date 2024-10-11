@@ -2,6 +2,7 @@ import 'bewohner_model.dart';
 import 'betreuer_model.dart';
 
 class Veranstaltung {
+  int? id; // Hinzugefügtes id-Feld
   String name;
   List<Bewohner> teilnehmendeBewohner;
   Betreuer betreuer;
@@ -12,6 +13,7 @@ class Veranstaltung {
   String beschreibung;
 
   Veranstaltung({
+    this.id, // Optionales id-Feld
     required this.name,
     required this.teilnehmendeBewohner,
     required this.betreuer,
@@ -24,8 +26,8 @@ class Veranstaltung {
 
   // Methode zum Erstellen einer Veranstaltung aus einem JSON-Objekt
   factory Veranstaltung.fromJson(Map<String, dynamic> json) {
-    // Bewohner- und Betreuerauswahl wird später detailliert behandelt
     return Veranstaltung(
+      id: json['id'], // id aus dem JSON-Objekt
       name: json['name'],
       teilnehmendeBewohner: List<Bewohner>.from(json['teilnehmendeBewohner'].map((bew) => Bewohner.fromJson(bew))),
       betreuer: Betreuer.fromJson(json['betreuer']),
@@ -40,6 +42,7 @@ class Veranstaltung {
   // Methode zum Umwandeln einer Veranstaltung in ein JSON-Objekt
   Map<String, dynamic> toJson() {
     return {
+      'id': id, // id hinzufügen
       'name': name,
       'teilnehmendeBewohner': teilnehmendeBewohner.map((bew) => bew.toJson()).toList(),
       'betreuer': betreuer.toJson(),

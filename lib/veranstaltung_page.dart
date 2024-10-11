@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'veranstaltung_model.dart';
 import 'bewohner_model.dart';
 import 'betreuer_model.dart';
+import 'database_helper.dart'; // Importiere den DatabaseHelper
 
 class VeranstaltungPage extends StatefulWidget {
   const VeranstaltungPage({super.key});
@@ -12,6 +13,7 @@ class VeranstaltungPage extends StatefulWidget {
 class _VeranstaltungPageState extends State<VeranstaltungPage> {
   // Liste der Veranstaltungen
   List<Veranstaltung> veranstaltungenListe = [];
+  final DatabaseHelper databaseHelper = DatabaseHelper(); // Instanz des DatabaseHelper
 
   // Dummy-Daten für Bewohner und Betreuer
   List<Bewohner> bewohnerDummyListe = [
@@ -35,20 +37,38 @@ class _VeranstaltungPageState extends State<VeranstaltungPage> {
   final TextEditingController beschreibungController = TextEditingController();
 
   // Datum und Zeit auswählen
-  DateTime? ausgewaehltesDatum;
-  TimeOfDay? anfangsZeit;
-  TimeOfDay? endZeit;
+  DateTime? ausgewaehltesDatum = DateTime.now(); // Standardwert auf heute setzen
+  TimeOfDay? anfangsZeit = TimeOfDay.now(); // Standardwert auf jetzt setzen
+  TimeOfDay? endZeit = TimeOfDay.now(); // Standardwert auf jetzt setzen
 
   @override
   void initState() {
     super.initState();
+    _loadVeranstaltungen(); // Veranstaltungen beim Start laden
     for (var bewohner in bewohnerDummyListe) {
       bewohnerCheckboxValues[bewohner] = false;
+    }
+    _checkDatabaseTables(); // Überprüfe die Tabellen in der Datenbank
+  }
+
+  // Veranstaltungen laden
+  void _loadVeranstaltungen() async {
+    veranstaltungenListe = await databaseHelper.getVeranstaltungen();
+    setState(() {});
+  }
+
+  // Überprüfe die Tabellen in der Datenbank
+  void _checkDatabaseTables() async {
+    List<String> tables = await databaseHelper.getTableNames();
+    if (!tables.contains('veranstaltung')) {
+      print('Die Tabelle "veranstaltung" existiert nicht.');
+    } else {
+      print('Die Tabelle "veranstaltung" existiert.');
     }
   }
 
   // Funktion zum Hinzufügen einer Veranstaltung
-  void _addVeranstaltung() {
+  void _addVeranstaltung() async {
     List<Bewohner> ausgewaehlteBewohner = bewohnerCheckboxValues.entries
         .where((entry) => entry.value)
         .map((entry) => entry.key)
@@ -63,29 +83,34 @@ class _VeranstaltungPageState extends State<VeranstaltungPage> {
       return;
     }
 
+    Veranstaltung neueVeranstaltung = Veranstaltung(
+      name: nameController.text,
+      teilnehmendeBewohner: ausgewaehlteBewohner,
+      betreuer: ausgewaehlterBetreuer!,
+      datum: ausgewaehltesDatum!,
+      anfang: DateTime(
+        ausgewaehltesDatum!.year,
+        ausgewaehltesDatum!.month,
+        ausgewaehltesDatum!.day,
+        anfangsZeit!.hour,
+        anfangsZeit!.minute,
+      ),
+      ende: DateTime(
+        ausgewaehltesDatum!.year,
+        ausgewaehltesDatum!.month,
+        ausgewaehltesDatum!.day,
+        endZeit!.hour,
+        endZeit!.minute,
+      ),
+      ort: ortController.text,
+      beschreibung: beschreibungController.text,
+    );
+
+    // Füge die Veranstaltung zur Datenbank hinzu
+    await databaseHelper.insertVeranstaltung(neueVeranstaltung);
+    
     setState(() {
-      veranstaltungenListe.add(Veranstaltung(
-        name: nameController.text,
-        teilnehmendeBewohner: ausgewaehlteBewohner,
-        betreuer: ausgewaehlterBetreuer!,
-        datum: ausgewaehltesDatum!,
-        anfang: DateTime(
-          ausgewaehltesDatum!.year,
-          ausgewaehltesDatum!.month,
-          ausgewaehltesDatum!.day,
-          anfangsZeit!.hour,
-          anfangsZeit!.minute,
-        ),
-        ende: DateTime(
-          ausgewaehltesDatum!.year,
-          ausgewaehltesDatum!.month,
-          ausgewaehltesDatum!.day,
-          endZeit!.hour,
-          endZeit!.minute,
-        ),
-        ort: ortController.text,
-        beschreibung: beschreibungController.text,
-      ));
+      veranstaltungenListe.add(neueVeranstaltung);
     });
 
     _resetForm();
@@ -97,9 +122,9 @@ class _VeranstaltungPageState extends State<VeranstaltungPage> {
     ortController.clear();
     beschreibungController.clear();
     ausgewaehlterBetreuer = null;
-    ausgewaehltesDatum = null;
-    anfangsZeit = null;
-    endZeit = null;
+    ausgewaehltesDatum = DateTime.now(); // Setze auf heute zurück
+    anfangsZeit = TimeOfDay.now(); // Setze auf jetzt zurück
+    endZeit = TimeOfDay.now(); // Setze auf jetzt zurück
 
     for (var bewohner in bewohnerCheckboxValues.keys) {
       bewohnerCheckboxValues[bewohner] = false;
@@ -238,7 +263,7 @@ class _VeranstaltungPageState extends State<VeranstaltungPage> {
   }
 
   // Speichert die bearbeitete Veranstaltung
-  void _saveEditedVeranstaltung(int index) {
+  void _saveEditedVeranstaltung(int index) async {
     List<Bewohner> ausgewaehlteBewohner = bewohnerCheckboxValues.entries
         .where((entry) => entry.value)
         .map((entry) => entry.key)
@@ -251,29 +276,35 @@ class _VeranstaltungPageState extends State<VeranstaltungPage> {
       return;
     }
 
+    Veranstaltung aktualisierteVeranstaltung = Veranstaltung(
+      id: veranstaltungenListe[index].id, // Behalte die ID bei der Aktualisierung
+      name: nameController.text,
+      teilnehmendeBewohner: ausgewaehlteBewohner,
+      betreuer: ausgewaehlterBetreuer!,
+      datum: ausgewaehltesDatum!,
+      anfang: DateTime(
+        ausgewaehltesDatum!.year,
+        ausgewaehltesDatum!.month,
+        ausgewaehltesDatum!.day,
+        anfangsZeit!.hour,
+        anfangsZeit!.minute,
+      ),
+      ende: DateTime(
+        ausgewaehltesDatum!.year,
+        ausgewaehltesDatum!.month,
+        ausgewaehltesDatum!.day,
+        endZeit!.hour,
+        endZeit!.minute,
+      ),
+      ort: ortController.text,
+      beschreibung: beschreibungController.text,
+    );
+
+    // Aktualisiere die Veranstaltung in der Datenbank
+    await databaseHelper.updateVeranstaltung(aktualisierteVeranstaltung);
+    
     setState(() {
-      veranstaltungenListe[index] = Veranstaltung(
-        name: nameController.text,
-        teilnehmendeBewohner: ausgewaehlteBewohner,
-        betreuer: ausgewaehlterBetreuer!,
-        datum: ausgewaehltesDatum!,
-        anfang: DateTime(
-          ausgewaehltesDatum!.year,
-          ausgewaehltesDatum!.month,
-          ausgewaehltesDatum!.day,
-          anfangsZeit!.hour,
-          anfangsZeit!.minute,
-        ),
-        ende: DateTime(
-          ausgewaehltesDatum!.year,
-          ausgewaehltesDatum!.month,
-          ausgewaehltesDatum!.day,
-          endZeit!.hour,
-          endZeit!.minute,
-        ),
-        ort: ortController.text,
-        beschreibung: beschreibungController.text,
-      );
+      veranstaltungenListe[index] = aktualisierteVeranstaltung;
     });
 
     _resetForm();
@@ -283,7 +314,7 @@ class _VeranstaltungPageState extends State<VeranstaltungPage> {
   Future<void> _pickDate(BuildContext context) async {
     final selectedDate = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: ausgewaehltesDatum ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
@@ -298,7 +329,7 @@ class _VeranstaltungPageState extends State<VeranstaltungPage> {
   Future<void> _pickTime(BuildContext context, bool isStartTime) async {
     final pickedTime = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.now(),
+      initialTime: isStartTime ? anfangsZeit ?? TimeOfDay.now() : endZeit ?? TimeOfDay.now(),
       builder: (BuildContext context, Widget? child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
@@ -318,7 +349,8 @@ class _VeranstaltungPageState extends State<VeranstaltungPage> {
   }
 
   // Veranstaltung löschen
-  void _deleteVeranstaltung(int index) {
+  void _deleteVeranstaltung(int index) async {
+    await databaseHelper.deleteVeranstaltung(veranstaltungenListe[index].id!);
     setState(() {
       veranstaltungenListe.removeAt(index);
     });
