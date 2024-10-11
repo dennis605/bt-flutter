@@ -5,10 +5,12 @@ import 'veranstaltung_page.dart';
 import 'tagesplan_page.dart'; // Importiere die Tagesplan-Seite
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -16,23 +18,25 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: HomePage(),
+      home: const HomePage(),
     );
   }
 }
 
 class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home'),
+        title: const Text('Home'),
       ),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            DrawerHeader(
+            const DrawerHeader(
               decoration: BoxDecoration(
                 color: Colors.blue,
               ),
@@ -45,53 +49,53 @@ class HomePage extends StatelessWidget {
               ),
             ),
             ListTile(
-              leading: Icon(Icons.person),
-              title: Text('Bewohner verwalten'),
+              leading: const Icon(Icons.person),
+              title: const Text('Bewohner verwalten'),
               onTap: () {
                 Navigator.pop(context); // Schließt den Drawer
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => BewohnerPage()),
+                  MaterialPageRoute(builder: (context) => const BewohnerPage()),
                 );
               },
             ),
             ListTile(
-              leading: Icon(Icons.supervisor_account),
-              title: Text('Betreuer verwalten'),
+              leading: const Icon(Icons.supervisor_account),
+              title: const Text('Betreuer verwalten'),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => BetreuerPage()),
+                  MaterialPageRoute(builder: (context) => const BetreuerPage()),
                 );
               },
             ),
             ListTile(
-              leading: Icon(Icons.event),
-              title: Text('Veranstaltungen verwalten'),
+              leading: const Icon(Icons.event),
+              title: const Text('Veranstaltungen verwalten'),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => VeranstaltungPage()),
+                  MaterialPageRoute(builder: (context) => const VeranstaltungPage()),
                 );
               },
             ),
             ListTile(
-              leading: Icon(Icons.calendar_today),
-              title: Text('Tagespläne verwalten'), // Neuer Eintrag für Tagespläne
+              leading: const Icon(Icons.calendar_today),
+              title: const Text('Tagespläne verwalten'), // Neuer Eintrag für Tagespläne
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => TagesplanPage()), // Zur Tagesplan-Seite navigieren
+                  MaterialPageRoute(builder: (context) => const TagesplanPage()), // Zur Tagesplan-Seite navigieren
                 );
               },
             ),
           ],
         ),
       ),
-      body: Center(
+      body: const Center(
         child: Text(
           'Willkommen zur CRUD-App',
           style: TextStyle(fontSize: 20),
