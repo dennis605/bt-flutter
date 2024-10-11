@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'bewohner_model.dart'; // Importiere das Bewohnermodell
+import 'database_helper.dart'; // Importiere den Datenbankhelper
 
 class BewohnerPage extends StatefulWidget {
   @override
@@ -9,6 +10,7 @@ class BewohnerPage extends StatefulWidget {
 class _BewohnerPageState extends State<BewohnerPage> {
   // Liste der Bewohner
   List<Bewohner> bewohnerListe = [];
+  final DatabaseHelper databaseHelper = DatabaseHelper();
 
   // Controller für das Formular
   final TextEditingController vornameController = TextEditingController();
@@ -16,31 +18,43 @@ class _BewohnerPageState extends State<BewohnerPage> {
   final TextEditingController alterController = TextEditingController();
   final TextEditingController kommentarController = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    _loadBewohner();
+  }
+
+  // Bewohner laden
+  void _loadBewohner() async {
+    bewohnerListe = await databaseHelper.getBewohner();
+    setState(() {});
+  }
+
   // Bewohner hinzufügen
-  void _addBewohner() {
-    setState(() {
-      bewohnerListe.add(Bewohner(
-        vorname: vornameController.text,
-        nachname: nachnameController.text,
-        alter: int.parse(alterController.text),
-        kommentar: kommentarController.text,
-      ));
-    });
+  void _addBewohner() async {
+    final neuerBewohner = Bewohner(
+      vorname: vornameController.text,
+      nachname: nachnameController.text,
+      alter: int.parse(alterController.text),
+      kommentar: kommentarController.text,
+    );
+
+    await databaseHelper.insertBewohner(neuerBewohner);
+    _loadBewohner(); // Liste aktualisieren
 
     // Formular zurücksetzen
     vornameController.clear();
     nachnameController.clear();
     alterController.clear();
     kommentarController.clear();
-  
   }
 
-
   // Bewohner löschen
-  void _deleteBewohner(int index) {
-    setState(() {
-      bewohnerListe.removeAt(index);
-    });
+  void _deleteBewohner(int index) async {
+    if (bewohnerListe[index].id != null) {
+      await databaseHelper.deleteBewohner(bewohnerListe[index].id!);
+      _loadBewohner(); // Liste aktualisieren
+    }
   }
 
   // Bewohner bearbeiten
@@ -87,15 +101,17 @@ class _BewohnerPageState extends State<BewohnerPage> {
             ),
             ElevatedButton(
               child: Text('Speichern'),
-              onPressed: () {
-                setState(() {
-                  bewohnerListe[index] = Bewohner(
-                    vorname: vornameController.text,
-                    nachname: nachnameController.text,
-                    alter: int.parse(alterController.text),
-                    kommentar: kommentarController.text,
-                  );
-                });
+              onPressed: () async {
+                final bearbeiteterBewohner = Bewohner(
+                  id: bewohner.id,
+                  vorname: vornameController.text,
+                  nachname: nachnameController.text,
+                  alter: int.parse(alterController.text),
+                  kommentar: kommentarController.text,
+                );
+
+                await databaseHelper.updateBewohner(bearbeiteterBewohner);
+                _loadBewohner(); // Liste aktualisieren
                 Navigator.of(context).pop();
               },
             ),

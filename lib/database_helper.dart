@@ -31,7 +31,7 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         vorname TEXT,
         nachname TEXT,
-        alter INTEGER
+        alter_age INTEGER
       )
     ''');
   }
@@ -49,7 +49,7 @@ class DatabaseHelper {
         id: maps[i]['id'],
         vorname: maps[i]['vorname'],
         nachname: maps[i]['nachname'],
-        alter: maps[i]['alter'],
+        alter: maps[i]['alter_age'],
         kommentar: '', // Provide a default value for kommentar
       );
     });

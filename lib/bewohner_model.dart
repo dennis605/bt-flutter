@@ -19,8 +19,8 @@ class Bewohner {
       id: json['id'],
       vorname: json['vorname'],
       nachname: json['nachname'],
-      alter: json['alter'],
-      kommentar: json['kommentar'],
+      alter: json['alter_age'],
+      kommentar: '', // Provide a default value for kommentar
     );
   }
 
@@ -30,7 +30,7 @@ class Bewohner {
       'id': id,
       'vorname': vorname,
       'nachname': nachname,
-      'alter': alter,
+      'alter_age': alter,
       'kommentar': kommentar,
     };
   }
@@ -39,8 +39,9 @@ class Bewohner {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'name': '$vorname $nachname',
-      'age': alter,
+      'vorname': vorname,
+      'nachname': nachname,
+      'alter_age': alter,
     };
   }
 }
