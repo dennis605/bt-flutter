@@ -32,7 +32,9 @@ class _BewohnerPageState extends State<BewohnerPage> {
     nachnameController.clear();
     alterController.clear();
     kommentarController.clear();
+  
   }
+
 
   // Bewohner löschen
   void _deleteBewohner(int index) {

@@ -1,10 +1,12 @@
 class Bewohner {
+  int? id;
   String vorname;
   String nachname;
   int alter;
   String kommentar;
 
   Bewohner({
+    this.id,
     required this.vorname,
     required this.nachname,
     required this.alter,
@@ -14,6 +16,7 @@ class Bewohner {
   // Methode zum Erstellen eines Bewohner-Objekts aus einem JSON-Objekt
   factory Bewohner.fromJson(Map<String, dynamic> json) {
     return Bewohner(
+      id: json['id'],
       vorname: json['vorname'],
       nachname: json['nachname'],
       alter: json['alter'],
@@ -24,10 +27,20 @@ class Bewohner {
   // Methode zum Umwandeln eines Bewohner-Objekts in ein JSON-Objekt
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'vorname': vorname,
       'nachname': nachname,
       'alter': alter,
       'kommentar': kommentar,
+    };
+  }
+
+  // Methode zum Umwandeln eines Bewohner-Objekts in eine Map
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': '$vorname $nachname',
+      'age': alter,
     };
   }
 }
