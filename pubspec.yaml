@@ -13,6 +13,7 @@ dependencies:
     sdk: flutter
   sqflite: ^2.0.0+4
   path_provider: ^2.0.11
+  sembast: ^3.1.0  # Hinzugefügt für Web-Unterstützung
 
 dev_dependencies:
   flutter_test:
