@@ -8,17 +8,19 @@ version: 1.0.0+1
 environment:
   sdk: ">=2.17.0 <3.0.0"
 
-dependencies:
+ddependencies:
   flutter:
     sdk: flutter
-  sqflite: ^2.0.0+4
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
   path_provider: ^2.0.11
-  sembast: ^3.1.0  # Hinzugefügt für Web-Unterstützung
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^1.0.0
+  build_runner: ^2.1.11
+  hive_generator: ^2.0.0
 
 flutter:
   uses-material-design: true
