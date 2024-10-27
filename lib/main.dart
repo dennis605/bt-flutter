@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'bewohner_page.dart';
-import 'betreuer_page.dart';
-import 'veranstaltung_page.dart';
-import 'tagesplan_page.dart'; // Importiere die Tagesplan-Seite
+import 'package:myapp/services/database_service.dart';
+import 'pages/bewohner_page.dart';
+import 'pages/betreuer_page.dart';
+import 'pages/veranstaltung_page.dart';
+import 'pages/tagesplan_page.dart'; // Importiere die Tagesplan-Seite
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await DatabaseService.initHive();
   runApp(const MyApp());
 }
 
@@ -77,18 +80,22 @@ class HomePage extends StatelessWidget {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const VeranstaltungPage()),
+                  MaterialPageRoute(
+                      builder: (context) => const VeranstaltungPage()),
                 );
               },
             ),
             ListTile(
               leading: const Icon(Icons.calendar_today),
-              title: const Text('Tagespläne verwalten'), // Neuer Eintrag für Tagespläne
+              title: const Text(
+                  'Tagespläne verwalten'), // Neuer Eintrag für Tagespläne
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const TagesplanPage()), // Zur Tagesplan-Seite navigieren
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          const TagesplanPage()), // Zur Tagesplan-Seite navigieren
                 );
               },
             ),
