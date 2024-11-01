@@ -3,7 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../models/veranstaltung_model.dart';
 import '../models/bewohner_model.dart';
 import '../models/betreuer_model.dart';
-
+import 'package:hive/hive.dart';
 class VeranstaltungPage extends StatefulWidget {
   const VeranstaltungPage({super.key});
 

@@ -3,6 +3,8 @@ import '../models/bewohner_model.dart';
 import '../models/betreuer_model.dart';
 import '../models/veranstaltung_model.dart';
 import '../models/tagesplan_model.dart';
+import 'package:hive/hive.dart';
+
 
 class DatabaseService {
   static const String bewohnerBox = 'bewohner';

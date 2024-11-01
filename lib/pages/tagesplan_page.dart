@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/tagesplan_model.dart';
 import '../models/veranstaltung_model.dart';
+import 'package:hive/hive.dart';
+
 
 class TagesplanPage extends StatefulWidget {
   const TagesplanPage({super.key});
