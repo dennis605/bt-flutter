@@ -54,11 +54,17 @@ class DatabaseService {
       print("Anzahl der Bewohner in der Box: ${box.length}");
       print("Alle Bewohner: ${box.values.toList()}");
       
-      // Überprüfe, ob die Box persistent ist
-      print("Box ist persistent: ${box.path != null}");
-      if (box.path != null) {
-        print("Box Pfad: ${box.path}");
-      }
+      // Überprüfe den Box-Status
+      print("Box Status:");
+      print("- Name: ${box.name}");
+      print("- Ist offen: ${box.isOpen}");
+      print("- Länge: ${box.length}");
+      print("- Keys: ${box.keys.toList()}");
+      print("- Werte: ${box.values.toList()}");
+      
+      // Erzwinge das Speichern
+      await box.flush();
+      
     } catch (e, stackTrace) {
       print("Fehler bei der Initialisierung: $e");
       print("Stacktrace: $stackTrace");
@@ -70,12 +76,26 @@ class DatabaseService {
   Future<void> addBewohner(Bewohner bewohner) async {
     try {
       final box = Hive.box<Bewohner>(bewohnerBox);
-      final key = await box.add(bewohner);
+      
+      // Generiere einen eindeutigen Key
+      final key = DateTime.now().millisecondsSinceEpoch.toString();
+      
+      // Speichere den Bewohner
+      await box.put(key, bewohner);
       print("Bewohner hinzugefügt mit Key: $key");
       print("Bewohner: $bewohner");
       print("Neue Anzahl der Bewohner: ${box.length}");
       print("Alle Bewohner nach Hinzufügen: ${box.values.toList()}");
-      await box.flush(); // Erzwinge das Speichern der Daten
+      
+      // Überprüfe den Box-Status nach dem Hinzufügen
+      print("Box Status nach Hinzufügen:");
+      print("- Länge: ${box.length}");
+      print("- Keys: ${box.keys.toList()}");
+      print("- Werte: ${box.values.toList()}");
+      
+      // Erzwinge das Speichern
+      await box.flush();
+      
     } catch (e, stackTrace) {
       print("Fehler beim Hinzufügen des Bewohners: $e");
       print("Stacktrace: $stackTrace");
@@ -99,10 +119,14 @@ class DatabaseService {
   Future<void> updateBewohner(int index, Bewohner bewohner) async {
     try {
       final box = Hive.box<Bewohner>(bewohnerBox);
-      await box.putAt(index, bewohner);
+      final key = box.keyAt(index);
+      await box.put(key, bewohner);
       print("Bewohner aktualisiert: $bewohner");
       print("Alle Bewohner nach Update: ${box.values.toList()}");
-      await box.flush(); // Erzwinge das Speichern der Daten
+      
+      // Erzwinge das Speichern
+      await box.flush();
+      
     } catch (e, stackTrace) {
       print("Fehler beim Aktualisieren des Bewohners: $e");
       print("Stacktrace: $stackTrace");
@@ -113,77 +137,18 @@ class DatabaseService {
   Future<void> deleteBewohner(int index) async {
     try {
       final box = Hive.box<Bewohner>(bewohnerBox);
-      await box.deleteAt(index);
+      final key = box.keyAt(index);
+      await box.delete(key);
       print("Bewohner gelöscht an Index: $index");
       print("Alle Bewohner nach Löschen: ${box.values.toList()}");
-      await box.flush(); // Erzwinge das Speichern der Daten
+      
+      // Erzwinge das Speichern
+      await box.flush();
+      
     } catch (e, stackTrace) {
       print("Fehler beim Löschen des Bewohners: $e");
       print("Stacktrace: $stackTrace");
       rethrow;
     }
-  }
-
-  // Betreuer CRUD
-  Future<void> addBetreuer(Betreuer betreuer) async {
-    final box = Hive.box<Betreuer>(betreuerBox);
-    await box.add(betreuer);
-  }
-
-  List<Betreuer> getAllBetreuer() {
-    final box = Hive.box<Betreuer>(betreuerBox);
-    return box.values.toList();
-  }
-
-  Future<void> updateBetreuer(int index, Betreuer betreuer) async {
-    final box = Hive.box<Betreuer>(betreuerBox);
-    await box.putAt(index, betreuer);
-  }
-
-  Future<void> deleteBetreuer(int index) async {
-    final box = Hive.box<Betreuer>(betreuerBox);
-    await box.deleteAt(index);
-  }
-
-  // Veranstaltung CRUD
-  Future<void> addVeranstaltung(Veranstaltung veranstaltung) async {
-    final box = Hive.box<Veranstaltung>(veranstaltungBox);
-    await box.add(veranstaltung);
-  }
-
-  List<Veranstaltung> getAllVeranstaltungen() {
-    final box = Hive.box<Veranstaltung>(veranstaltungBox);
-    return box.values.toList();
-  }
-
-  Future<void> updateVeranstaltung(int index, Veranstaltung veranstaltung) async {
-    final box = Hive.box<Veranstaltung>(veranstaltungBox);
-    await box.putAt(index, veranstaltung);
-  }
-
-  Future<void> deleteVeranstaltung(int index) async {
-    final box = Hive.box<Veranstaltung>(veranstaltungBox);
-    await box.deleteAt(index);
-  }
-
-  // Tagesplan CRUD
-  Future<void> addTagesplan(Tagesplan tagesplan) async {
-    final box = Hive.box<Tagesplan>(tagesplanBox);
-    await box.add(tagesplan);
-  }
-
-  List<Tagesplan> getAllTagesplaene() {
-    final box = Hive.box<Tagesplan>(tagesplanBox);
-    return box.values.toList();
-  }
-
-  Future<void> updateTagesplan(int index, Tagesplan tagesplan) async {
-    final box = Hive.box<Tagesplan>(tagesplanBox);
-    await box.putAt(index, tagesplan);
-  }
-
-  Future<void> deleteTagesplan(int index) async {
-    final box = Hive.box<Tagesplan>(tagesplanBox);
-    await box.deleteAt(index);
   }
 }

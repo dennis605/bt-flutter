@@ -12,16 +12,16 @@ class BewohnerPage extends StatefulWidget {
 
 class _BewohnerPageState extends State<BewohnerPage> {
   final DatabaseService _databaseService = DatabaseService();
+  late final Box<Bewohner> _bewohnerBox;
   final TextEditingController vornameController = TextEditingController();
   final TextEditingController nachnameController = TextEditingController();
   final TextEditingController alterController = TextEditingController();
   final TextEditingController kommentarController = TextEditingController();
 
-  List<Bewohner> _bewohner = [];
-
   @override
   void initState() {
     super.initState();
+    _bewohnerBox = Hive.box<Bewohner>('bewohner');
     _loadBewohner();
   }
 
@@ -29,9 +29,7 @@ class _BewohnerPageState extends State<BewohnerPage> {
     try {
       final bewohner = _databaseService.getAllBewohner();
       print("Bewohner geladen: $bewohner");
-      setState(() {
-        _bewohner = bewohner;
-      });
+      setState(() {});
     } catch (e) {
       print("Fehler beim Laden der Bewohner: $e");
       ScaffoldMessenger.of(context).showSnackBar(
@@ -52,7 +50,7 @@ class _BewohnerPageState extends State<BewohnerPage> {
       await _databaseService.addBewohner(neuerBewohner);
       print("Neuer Bewohner hinzugefügt: $neuerBewohner");
       _clearInputs();
-      await _loadBewohner();
+      setState(() {});
     } catch (e) {
       print("Fehler beim Hinzufügen des Bewohners: $e");
       ScaffoldMessenger.of(context).showSnackBar(
@@ -121,7 +119,7 @@ class _BewohnerPageState extends State<BewohnerPage> {
                   print("Bewohner aktualisiert: $updatedBewohner");
                   Navigator.pop(context);
                   _clearInputs();
-                  await _loadBewohner();
+                  setState(() {});
                 } catch (e) {
                   print("Fehler beim Aktualisieren des Bewohners: $e");
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -142,7 +140,7 @@ class _BewohnerPageState extends State<BewohnerPage> {
     try {
       await _databaseService.deleteBewohner(index);
       print("Bewohner an Index $index gelöscht");
-      await _loadBewohner();
+      setState(() {});
     } catch (e) {
       print("Fehler beim Löschen des Bewohners: $e");
       ScaffoldMessenger.of(context).showSnackBar(
@@ -191,23 +189,25 @@ class _BewohnerPageState extends State<BewohnerPage> {
           const Divider(),
           Expanded(
             child: ValueListenableBuilder(
-              valueListenable: Hive.box<Bewohner>('bewohner').listenable(),
-              builder: (context, box, _) {
+              valueListenable: _bewohnerBox.listenable(),
+              builder: (context, Box<Bewohner> box, _) {
+                final bewohner = box.values.toList();
+                print("Aktuelle Bewohner in der Liste: $bewohner");
                 return ListView.builder(
-                  itemCount: _bewohner.length,
+                  itemCount: bewohner.length,
                   itemBuilder: (context, index) {
-                    final bewohner = _bewohner[index];
+                    final currentBewohner = bewohner[index];
                     return ListTile(
-                      title: Text('${bewohner.vorname} ${bewohner.nachname}'),
+                      title: Text('${currentBewohner.vorname} ${currentBewohner.nachname}'),
                       subtitle: Text(
-                        'Alter: ${bewohner.alter}\nKommentar: ${bewohner.kommentar}',
+                        'Alter: ${currentBewohner.alter}\nKommentar: ${currentBewohner.kommentar}',
                       ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
                             icon: const Icon(Icons.edit),
-                            onPressed: () => _editBewohner(index, bewohner),
+                            onPressed: () => _editBewohner(index, currentBewohner),
                           ),
                           IconButton(
                             icon: const Icon(Icons.delete),

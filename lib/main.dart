@@ -9,14 +9,13 @@ import 'models/bewohner_model.dart';
 import 'models/betreuer_model.dart';
 import 'models/veranstaltung_model.dart';
 import 'models/tagesplan_model.dart';
-import 'package:path_provider/path_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   try {
-    // Initialisiere Hive für Web mit spezifischem Pfad
-    await Hive.initFlutter('hive_db');
+    // Initialisiere Hive für Web
+    await Hive.initFlutter();
     
     // Registriere Adapter
     if (!Hive.isAdapterRegistered(0)) {
@@ -32,30 +31,44 @@ void main() async {
       Hive.registerAdapter(TagesplanAdapter());
     }
     
-    // Öffne Boxen mit spezifischen Optionen für Web-Persistenz
-    await Hive.openBox<Bewohner>('bewohner', compactionStrategy: (entries, deletedEntries) {
-      return deletedEntries > 50 || entries > 500;
-    });
-    await Hive.openBox<Betreuer>('betreuer', compactionStrategy: (entries, deletedEntries) {
-      return deletedEntries > 50 || entries > 500;
-    });
-    await Hive.openBox<Veranstaltung>('veranstaltung', compactionStrategy: (entries, deletedEntries) {
-      return deletedEntries > 50 || entries > 500;
-    });
-    await Hive.openBox<Tagesplan>('tagesplan', compactionStrategy: (entries, deletedEntries) {
-      return deletedEntries > 50 || entries > 500;
-    });
+    // Öffne Boxen
+    final bewohnerBox = await Hive.openBox<Bewohner>(
+      'bewohner',
+      compactionStrategy: (entries, deletedEntries) {
+        return deletedEntries > 50;
+      },
+    );
     
+    // Füge einen Test-Bewohner hinzu, wenn die Box leer ist
+    if (bewohnerBox.isEmpty) {
+      print('Box ist leer, füge Test-Bewohner hinzu');
+      final testBewohner = Bewohner(
+        vorname: 'Test',
+        nachname: 'Bewohner',
+        alter: 30,
+        kommentar: 'Test Eintrag',
+      );
+      await bewohnerBox.put('test', testBewohner);
+      await bewohnerBox.flush();
+    }
+    
+    // Öffne andere Boxen
+    await Hive.openBox<Betreuer>('betreuer');
+    await Hive.openBox<Veranstaltung>('veranstaltung');
+    await Hive.openBox<Tagesplan>('tagesplan');
+    
+    // Überprüfe die Box
     print('Hive wurde erfolgreich initialisiert');
-    
-    // Debug-Informationen
-    final bewohnerBox = Hive.box<Bewohner>('bewohner');
     print('Bewohner Box Status:');
     print('- Ist geöffnet: ${bewohnerBox.isOpen}');
     print('- Anzahl Einträge: ${bewohnerBox.length}');
     print('- Alle Einträge: ${bewohnerBox.values.toList()}');
     print('- Box Name: ${bewohnerBox.name}');
-    print('- Box Path: ${bewohnerBox.path}');
+    print('- Box Keys: ${bewohnerBox.keys.toList()}');
+    
+    // Erzwinge das Speichern
+    await bewohnerBox.compact();
+    await bewohnerBox.flush();
     
   } catch (e, stackTrace) {
     print('Fehler bei der Hive-Initialisierung: $e');
