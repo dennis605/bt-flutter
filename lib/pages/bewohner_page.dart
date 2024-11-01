@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import '../models/bewohner_model.dart';
-import 'package:hive/hive.dart';
-
+import '../services/database_service.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class BewohnerPage extends StatefulWidget {
   const BewohnerPage({super.key});
@@ -12,23 +11,54 @@ class BewohnerPage extends StatefulWidget {
 }
 
 class _BewohnerPageState extends State<BewohnerPage> {
-  final _bewohnerBox = Hive.box<Bewohner>('bewohner');
-  
+  final DatabaseService _databaseService = DatabaseService();
   final TextEditingController vornameController = TextEditingController();
   final TextEditingController nachnameController = TextEditingController();
   final TextEditingController alterController = TextEditingController();
   final TextEditingController kommentarController = TextEditingController();
 
-  void _addBewohner() {
-    final neuerBewohner = Bewohner(
-      vorname: vornameController.text,
-      nachname: nachnameController.text,
-      alter: int.parse(alterController.text),
-      kommentar: kommentarController.text,
-    );
+  List<Bewohner> _bewohner = [];
 
-    _bewohnerBox.add(neuerBewohner);
-    _clearInputs();
+  @override
+  void initState() {
+    super.initState();
+    _loadBewohner();
+  }
+
+  Future<void> _loadBewohner() async {
+    try {
+      final bewohner = _databaseService.getAllBewohner();
+      print("Bewohner geladen: $bewohner");
+      setState(() {
+        _bewohner = bewohner;
+      });
+    } catch (e) {
+      print("Fehler beim Laden der Bewohner: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Fehler beim Laden der Bewohner')),
+      );
+    }
+  }
+
+  Future<void> _addBewohner() async {
+    try {
+      final neuerBewohner = Bewohner(
+        vorname: vornameController.text,
+        nachname: nachnameController.text,
+        alter: int.parse(alterController.text),
+        kommentar: kommentarController.text,
+      );
+
+      await _databaseService.addBewohner(neuerBewohner);
+      print("Neuer Bewohner hinzugefügt: $neuerBewohner");
+      _clearInputs();
+      await _loadBewohner();
+    } catch (e) {
+      print("Fehler beim Hinzufügen des Bewohners: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Fehler beim Hinzufügen des Bewohners')),
+      );
+    }
   }
 
   void _clearInputs() {
@@ -38,7 +68,7 @@ class _BewohnerPageState extends State<BewohnerPage> {
     kommentarController.clear();
   }
 
-  void _editBewohner(int index, Bewohner bewohner) {
+  Future<void> _editBewohner(int index, Bewohner bewohner) async {
     showDialog(
       context: context,
       builder: (context) {
@@ -79,16 +109,26 @@ class _BewohnerPageState extends State<BewohnerPage> {
               child: const Text('Abbrechen'),
             ),
             ElevatedButton(
-              onPressed: () {
-                final updatedBewohner = Bewohner(
-                  vorname: vornameController.text,
-                  nachname: nachnameController.text,
-                  alter: int.parse(alterController.text),
-                  kommentar: kommentarController.text,
-                );
-                _bewohnerBox.putAt(index, updatedBewohner);
-                Navigator.pop(context);
-                _clearInputs();
+              onPressed: () async {
+                try {
+                  final updatedBewohner = Bewohner(
+                    vorname: vornameController.text,
+                    nachname: nachnameController.text,
+                    alter: int.parse(alterController.text),
+                    kommentar: kommentarController.text,
+                  );
+                  await _databaseService.updateBewohner(index, updatedBewohner);
+                  print("Bewohner aktualisiert: $updatedBewohner");
+                  Navigator.pop(context);
+                  _clearInputs();
+                  await _loadBewohner();
+                } catch (e) {
+                  print("Fehler beim Aktualisieren des Bewohners: $e");
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Fehler beim Aktualisieren des Bewohners')),
+                  );
+                }
               },
               child: const Text('Speichern'),
             ),
@@ -98,8 +138,17 @@ class _BewohnerPageState extends State<BewohnerPage> {
     );
   }
 
-  void _deleteBewohner(int index) {
-    _bewohnerBox.deleteAt(index);
+  Future<void> _deleteBewohner(int index) async {
+    try {
+      await _databaseService.deleteBewohner(index);
+      print("Bewohner an Index $index gelöscht");
+      await _loadBewohner();
+    } catch (e) {
+      print("Fehler beim Löschen des Bewohners: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Fehler beim Löschen des Bewohners')),
+      );
+    }
   }
 
   @override
@@ -142,23 +191,23 @@ class _BewohnerPageState extends State<BewohnerPage> {
           const Divider(),
           Expanded(
             child: ValueListenableBuilder(
-              valueListenable: _bewohnerBox.listenable(),
-              builder: (context, Box<Bewohner> box, _) {
+              valueListenable: Hive.box<Bewohner>('bewohner').listenable(),
+              builder: (context, box, _) {
                 return ListView.builder(
-                  itemCount: box.length,
+                  itemCount: _bewohner.length,
                   itemBuilder: (context, index) {
-                    final bewohner = box.getAt(index);
+                    final bewohner = _bewohner[index];
                     return ListTile(
-                      title: Text('${bewohner?.vorname} ${bewohner?.nachname}'),
+                      title: Text('${bewohner.vorname} ${bewohner.nachname}'),
                       subtitle: Text(
-                        'Alter: ${bewohner?.alter}\nKommentar: ${bewohner?.kommentar}',
+                        'Alter: ${bewohner.alter}\nKommentar: ${bewohner.kommentar}',
                       ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
                             icon: const Icon(Icons.edit),
-                            onPressed: () => _editBewohner(index, bewohner!),
+                            onPressed: () => _editBewohner(index, bewohner),
                           ),
                           IconButton(
                             icon: const Icon(Icons.delete),
